@@ -10,7 +10,7 @@ async def on_ready():
     print(f'Successfully connected! Logged in as {client.user}')
 
 @client.event
-async def on_message(self,message):
+async def on_message(message):
     if message.author == client.user:
         return
     
@@ -25,15 +25,17 @@ async def on_message(self,message):
                 return m.author == message.author and m.content == 'paper'
             elif m.content == 'scissors':
                 return m.author == message.author and m.content == 'scissors'
+            else:
+                return m.author == message.author and m.content
 
         bot_choice = choice(['rock','paper','scissors'])
 
-        def lose_text(choice):
+        def lose_text(chosen):
             text = [
-                f"I can't believe it! And here that merchant told me this was special {choice}",
-                f"Wow, seriously? I spent hours trying to find this here {choice}",
+                f"I can't believe it! And here that merchant told me this was special {chosen}",
+                f"Wow, seriously? I spent hours trying to find this here {chosen}",
                 f"Are you sure ya ain't cheatin'? You strike me as the cheatin' type.",
-                f"Oho! We got a smart one. Or at least, they think they are. Goin' 'round destroyin' my {choice}",
+                f"Oho! We got a smart one. Or at least, they think they are. Goin' 'round destroyin' my {chosen}",
                 f"Alright, now you're just playin' plain dirty."
             ]
             loser = choice(text)
@@ -44,26 +46,33 @@ async def on_message(self,message):
                 f"Hahaaaa! I knew I bet on the right {bot_choice}!",
                 f"Aww, don't cry. Not everyone can have a {bot_choice} like me.",
                 f"Alright, I won! Now go on, 'git!",
-                f"Well, with a {player_choice} like that, it's not a wonder my {bot_choice} won."
+                f"Well, with a {player_choice} like that, it's not a wonder my {bot_choice} won.",
                 f"Are you even tryin'? Who picks {player_choice}? Well, I certainly do not, cuz I picked {bot_choice}"
             ]
             winner = choice(text)
             return winner
 
         try:
-            player_choice = await self.wait_for('message',check=choose,timeout=10.0)
+            player_choice = await client.wait_for('message',check=choose,timeout=10.0)
         except asyncio.TimeoutError:
             return await message.channel.send("What's 'a matter? You chicken?")
-        if player_choice == bot_choice:
+        player = player_choice.content
+        if player == bot_choice:
             return await message.channel.send(f"What in tarnation? I picked {bot_choice} too! Ya cheatin' or sumthin'?")
-        elif player_choice == "scissors" and bot_choice == "paper":
+        elif player == "scissors" and bot_choice == "paper":
             return await message.channel.send(lose_text(bot_choice))
-        elif player_choice == "paper" and bot_choice == "rock":
+        elif player == "paper" and bot_choice == "rock":
             return await message.channel.send(lose_text(bot_choice))
-        elif player_choice == "rock" and bot_choice == "scissors":
+        elif player == "rock" and bot_choice == "scissors":
             return await message.channel.send(lose_text(bot_choice))
+        elif bot_choice == "scissors" and player == "paper":
+            return await message.channel.send(victory_text(player,bot_choice))
+        elif bot_choice == "paper" and player == "rock":
+            return await message.channel.send(victory_text(player,bot_choice))
+        elif bot_choice == "rock" and player == "scissors":
+            return await message.channel.send(victory_text(player,bot_choice))
         else:
-            return await message.channel.send(victory_text(player_choice,bot_choice))
+            return await message.channel.send("That ain't how you play this game, bubba.")
         
 
 client.run(os.environ['DISCORD_TOKEN'])
